@@ -7,3 +7,10 @@
 .layout-mian{
     height: 100vh;
 }
+
+.page-title{
+    font-size: 14px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f5;
+    margin-bottom: 10px;
+}

@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import { Button, Breadcrumb, Layout, Menu, theme } from 'antd';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { LaptopOutlined, NotificationOutlined, UserOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { menuItems } from '../../config/routes';
 import './App.css';
@@ -106,7 +105,8 @@ const App = () => {
                     theme="dark"
                     mode="horizontal"
                     defaultSelectedKeys={['2']}
-                    items={items1}
+                    items={menuItems}
+                    onClick={handleMenuClick}
                     style={{ flex: 1, minWidth: 0 }}
                 />
             </Header>
@@ -133,6 +133,7 @@ const App = () => {
                             minHeight: 280,
                             background: colorBgContainer,
                             borderRadius: borderRadiusLG,
+                            overflow: 'auto',
                         }}
                     >
                         <Outlet />
