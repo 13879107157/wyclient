@@ -50,9 +50,9 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => {
         const { success, message: msg, data } = response.data;
-        
+        console.log(response)
         // 只处理业务成功且配置了显示消息的情况
-        if (success && msg) {
+        if (success && msg && response.config.url !== "/api/platform-types/1") {
             showMessage(msg, 'success');
         }
         
