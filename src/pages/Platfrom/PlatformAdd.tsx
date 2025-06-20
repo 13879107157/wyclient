@@ -45,11 +45,32 @@ const PlatformAdd = () => {
             setLoading(true);
             const values = await form.validateFields();
 
-            // 处理匹配规则和排除规则为数组
+            // 处理匹配规则和排除规则
+            let matchRule = null;
+            let exclusionRule = null;
+
+            // 仅当有有效规则时进行序列化
+            if (values.matchRules && values.matchRules.length > 0) {
+                // 过滤掉空字符串并序列化
+                const validRules = values.matchRules.filter((rule: string) => rule.trim() !== '');
+                if (validRules.length > 0) {
+                    matchRule = JSON.stringify(validRules);
+                }
+            }
+
+            if (values.exclusionRules && values.exclusionRules.length > 0) {
+                // 过滤掉空字符串并序列化
+                const validRules = values.exclusionRules.filter((rule: string) => rule.trim() !== '');
+                if (validRules.length > 0) {
+                    exclusionRule = JSON.stringify(validRules);
+                }
+            }
+
+            // 构建提交数据
             const formattedValues = {
                 ...values,
-                matchRule: JSON.stringify(values.matchRules.filter((rule: string) => rule.trim() !== '')),
-                exclusionRule: JSON.stringify(values.exclusionRules.filter((rule: string) => rule.trim() !== '')),
+                matchRule,
+                exclusionRule,
             };
 
             // 移除临时字段
@@ -67,10 +88,8 @@ const PlatformAdd = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-sm">
-               <div className="page-title">
-                <h1>
-                   新增平台
-                </h1>
+            <div className="page-title">
+                <h1>新增平台</h1>
             </div>
 
             <Form
@@ -106,7 +125,6 @@ const PlatformAdd = () => {
                         </Form.Item>
                     </Col>
                     <Col span={12}>
-
                         <Form.Item
                             name="platformTypeId"
                             label="平台类型"
@@ -157,13 +175,14 @@ const PlatformAdd = () => {
                             label="描述"
                         >
                             <Input.TextArea placeholder="请输入描述" rows={2} />
-                        </Form.Item></Col>
+                        </Form.Item>
+                    </Col>
                     <Col span={12}></Col>
                 </Row>
 
                 <Row gutter={24}>
                     <Col span={12}>
-                        {/* 动态匹配规则 */}
+                        {/* 动态匹配规则 - 移除必填验证 */}
                         <Form.Item label="匹配规则">
                             <Form.List name="matchRules">
                                 {(fields, { add, remove }) => (
@@ -176,7 +195,6 @@ const PlatformAdd = () => {
                                             >
                                                 <Form.Item
                                                     {...field}
-                                                    rules={[{ required: index === 0, message: '请输入至少一个匹配规则' }]}
                                                     noStyle
                                                 >
                                                     <Input placeholder="请输入匹配规则" style={{ width: '90%' }} />
@@ -197,7 +215,8 @@ const PlatformAdd = () => {
                                     </div>
                                 )}
                             </Form.List>
-                        </Form.Item></Col>
+                        </Form.Item>
+                    </Col>
                     <Col span={12}>
                         {/* 动态排除规则 */}
                         <Form.Item label="排除规则">
@@ -233,17 +252,11 @@ const PlatformAdd = () => {
                                 )}
                             </Form.List>
                         </Form.Item>
-
                     </Col>
                 </Row>
 
-
-
-
-
                 {/* 操作按钮 */}
-                <Form.Item >
-            
+                <Form.Item>
                     <Button
                         type="primary"
                         htmlType="submit"
