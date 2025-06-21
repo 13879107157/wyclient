@@ -32,7 +32,7 @@ const InformationMatch = () => {
     const [file, setFile] = useState<File | null>(null);
     const [result, setResult] = useState<any>(null);
     const [platformGroupFilter, setPlatformGroupFilter] = useState<string[] | null>(null);
-    const [platformFilter, setPlatformFilter] = useState<string[] | null>(null); // 新增平台筛选
+    const [platformFilter, setPlatformFilter] = useState<string[] | null>(null);
     const [dimensionFilter, setDimensionFilter] = useState<string[] | null>(null);
     const [dataModalVisible, setDataModalVisible] = useState(false);
     const [dataModalData, setDataModalData] = useState<any[]>([]);
@@ -42,9 +42,10 @@ const InformationMatch = () => {
     const [statisticsModalData, setStatisticsModalData] = useState<any>({});
     const [statisticsModalTitle, setStatisticsModalTitle] = useState<string>('');
     const [selectedStatisticsKey, setSelectedStatisticsKey] = useState<string>('');
+    const [dimensionTotals, setDimensionTotals] = useState({}); // 存储各维度总和
     const chartRef = useRef<HTMLDivElement>(null);
     const [loadingData, setLoadingData] = useState(false);
-    const [originalResult, setOriginalResult] = useState<any>(null); // 保存原始结果数据
+    const [originalResult, setOriginalResult] = useState<any>(null);
 
     // 处理文件上传
     const handleUpload = async () => {
@@ -59,9 +60,8 @@ const InformationMatch = () => {
                 setLoadingData(true);
                 const response = await processExcelMatching(params);
                 setResult(response);
-                setOriginalResult(response); // 保存原始结果
+                setOriginalResult(response);
                 renderChart(calculateFilteredStatistics());
-                // 重置筛选条件
                 setPlatformGroupFilter(null);
                 setPlatformFilter(null);
                 setDimensionFilter(null);
@@ -83,13 +83,12 @@ const InformationMatch = () => {
         setPlatformGroupFilter(null);
         setPlatformFilter(null);
         setDimensionFilter(null);
-        
-        // 清空上传区域的文件列表
+
         const uploadComponent = document.querySelector('.ant-upload-list');
         if (uploadComponent) {
             uploadComponent.innerHTML = '';
         }
-        
+
         message.success('已清空上传文件和相关数据');
     };
 
@@ -98,25 +97,21 @@ const InformationMatch = () => {
         setPlatformGroupFilter(null);
         setPlatformFilter(null);
         setDimensionFilter(null);
-        setResult(originalResult); // 恢复原始结果
+        setResult(originalResult);
         if (originalResult) {
             renderChart(calculateFilteredStatistics());
         }
         message.success('已重置查询条件');
     };
 
-    // 平台组筛选 - 根据选择动态更新图表数据
+    // 平台组筛选
     const handlePlatformGroupFilterChange = (value: string[] | null) => {
         setPlatformGroupFilter(value);
-        
-        // 当平台组筛选变化时，重置平台筛选
         setPlatformFilter(null);
-        
-        // 根据筛选条件过滤结果
         renderChart(calculateFilteredStatistics());
     };
 
-    // 平台筛选 - 根据选择动态更新图表数据
+    // 平台筛选
     const handlePlatformFilterChange = (value: string[] | null) => {
         setPlatformFilter(value);
         renderChart(calculateFilteredStatistics());
@@ -140,7 +135,7 @@ const InformationMatch = () => {
                 setLoadingData(true);
                 const response = await processExcelMatching(params);
                 setResult(response);
-                setOriginalResult(response); // 保存新的原始结果
+                setOriginalResult(response);
                 renderChart(calculateFilteredStatistics());
             } catch (error) {
                 message.error('查询失败，请稍后重试');
@@ -155,35 +150,31 @@ const InformationMatch = () => {
     // 根据当前筛选条件计算统计数据
     const calculateFilteredStatistics = () => {
         if (!originalResult || !dimensionFilter || dimensionFilter.length === 0) return {};
-        
-        // 获取筛选的平台组
+
         let filteredGroups = originalResult.platformStructure;
         if (platformGroupFilter && platformGroupFilter.length > 0 && !platformGroupFilter.includes('全部')) {
-            filteredGroups = filteredGroups.filter(group => 
+            filteredGroups = filteredGroups.filter(group =>
                 platformGroupFilter.includes(group.platformGroupName)
             );
         }
-        
-        // 获取筛选的平台
+
         let filteredPlatforms = filteredGroups.flatMap(group => group.platformGroupChildren);
         if (platformFilter && platformFilter.length > 0) {
-            filteredPlatforms = filteredPlatforms.filter(platform => 
+            filteredPlatforms = filteredPlatforms.filter(platform =>
                 platformFilter.includes(platform.platformName)
             );
         }
-        
-        // 合并所有筛选平台的统计数据
+
         const statistics = {};
-        
+
         dimensionFilter.forEach(dimension => {
             statistics[dimension] = {};
-            
+
             filteredPlatforms.forEach(platform => {
-                // 修复：先检查 platform.statistics 是否存在
                 if (!platform.statistics) return;
-                
+
                 const platformStats = platform.statistics[dimension] || {};
-                
+
                 Object.entries(platformStats).forEach(([key, value]) => {
                     if (statistics[dimension][key]) {
                         statistics[dimension][key] += value;
@@ -193,7 +184,7 @@ const InformationMatch = () => {
                 });
             });
         });
-        
+
         return statistics;
     };
 
@@ -211,19 +202,27 @@ const InformationMatch = () => {
         console.log(`加载第${page}页数据，每页${pageSize}条`);
     };
 
-    // 查看统计
+    // 查看统计（已添加总和计算）
     const handleViewStatistics = (statistics: any, title: string, key?: string) => {
         console.log("handleViewStatistics", statistics);
-        
-        const hasData = Object.keys(statistics).some(dimension => 
+
+        const hasData = Object.keys(statistics).some(dimension =>
             Object.keys(statistics[dimension] || {}).length > 0
         );
-        
+
         if (!hasData) {
             message.info('暂无统计数据');
             return;
         }
-        
+
+        // 计算每个维度的总和
+        const dimensionTotals = {};
+        Object.keys(statistics).forEach(dimension => {
+            const dimensionData = statistics[dimension] || {};
+            const total = Object.values(dimensionData).reduce((sum, value) => sum + (Number(value) || 0), 0);
+            dimensionTotals[dimension] = total;
+        });
+
         const sortedStatistics = {};
         Object.keys(statistics).forEach(dimension => {
             const dimensionData = statistics[dimension] || {};
@@ -232,10 +231,11 @@ const InformationMatch = () => {
                 .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
             sortedStatistics[dimension] = sortedData;
         });
-        
+
         setStatisticsModalData(sortedStatistics);
         setStatisticsModalTitle(title);
         setSelectedStatisticsKey(key || Object.keys(sortedStatistics)[0]);
+        setDimensionTotals(dimensionTotals); // 保存各维度总和
         setStatisticsModalVisible(true);
     };
 
@@ -243,17 +243,17 @@ const InformationMatch = () => {
     const handleExport = () => {
         if (result) {
             const filteredPlatformStructure = result.platformStructure.filter((group: any) =>
-                !platformGroupFilter || 
-                platformGroupFilter.includes('全部') || 
+                !platformGroupFilter ||
+                platformGroupFilter.includes('全部') ||
                 platformGroupFilter.includes(group.platformGroupName)
             ).map(group => ({
                 ...group,
                 platformGroupChildren: group.platformGroupChildren.filter(platform =>
-                    !platformFilter || 
+                    !platformFilter ||
                     platformFilter.includes(platform.platformName)
                 )
             }));
-            
+
             const dataToExport = [];
             filteredPlatformStructure.forEach((group: any) => {
                 dataToExport.push({
@@ -291,19 +291,19 @@ const InformationMatch = () => {
         return buf;
     };
 
-    // 渲染图表 - 使用筛选后的统计数据
+    // 渲染图表
     const renderChart = (statistics: any) => {
         if (chartRef.current && statistics && dimensionFilter && dimensionFilter.length > 0) {
             const myChart = echarts.init(chartRef.current);
-            
+
             const dimensions = dimensionFilter;
             const legendData = [];
             const seriesData = [];
-            
+
             dimensions.forEach(dimension => {
                 if (statistics[dimension]) {
                     legendData.push(dimension);
-                    
+
                     const dimensionData = Object.entries(statistics[dimension] || {})
                         .sort((a, b) => b[1] - a[1])
                         .slice(0, 10)
@@ -311,7 +311,7 @@ const InformationMatch = () => {
                             name: key,
                             value: Number(value) || 0
                         }));
-                    
+
                     seriesData.push({
                         name: dimension,
                         type: 'bar',
@@ -319,10 +319,10 @@ const InformationMatch = () => {
                     });
                 }
             });
-            
+
             const allValues = seriesData.flatMap(series => series.data.map(item => item.value));
             const maxValue = Math.max(...allValues);
-            
+
             const option = {
                 title: { text: `多维度数据对比统计` },
                 legend: {
@@ -353,7 +353,7 @@ const InformationMatch = () => {
                 },
                 series: seriesData
             };
-            
+
             myChart.setOption(option);
         }
     };
@@ -404,14 +404,14 @@ const InformationMatch = () => {
 
     // 筛选后的平台组数据
     const filteredPlatformStructure = result
-      ? result.platformStructure.filter((group: any) =>
-            !platformGroupFilter || 
-            platformGroupFilter.includes('全部') || 
+        ? result.platformStructure.filter((group: any) =>
+            !platformGroupFilter ||
+            platformGroupFilter.includes('全部') ||
             platformGroupFilter.includes(group.platformGroupName)
         ).map(group => ({
             ...group,
             platformGroupChildren: group.platformGroupChildren.filter(platform =>
-                !platformFilter || 
+                !platformFilter ||
                 platformFilter.includes(platform.platformName)
             )
         })).filter(group => group.platformGroupChildren.length > 0)
@@ -420,11 +420,11 @@ const InformationMatch = () => {
     // 获取当前筛选的平台列表
     const getFilteredPlatforms = () => {
         if (!result || !platformGroupFilter) return [];
-        
+
         return result.platformStructure
-            .filter(group => 
-                !platformGroupFilter || 
-                platformGroupFilter.includes('全部') || 
+            .filter(group =>
+                !platformGroupFilter ||
+                platformGroupFilter.includes('全部') ||
                 platformGroupFilter.includes(group.platformGroupName)
             )
             .flatMap(group => group.platformGroupChildren)
@@ -449,6 +449,11 @@ const InformationMatch = () => {
 
     return (
         <div className="information-match-container">
+             <div className="page-title">
+                <h1>
+                    3++导出数据分析
+                </h1>
+            </div>
             {/* 拖拽上传区域 */}
             <Dragger
                 accept=".xlsx,.xls"
@@ -458,7 +463,7 @@ const InformationMatch = () => {
                 }}
                 onChange={(info) => {
                     const { fileList } = info;
-                    
+
                     if (fileList.length > 0) {
                         const latestFile = fileList[fileList.length - 1];
                         if (latestFile && latestFile.originFileObj) {
@@ -485,9 +490,7 @@ const InformationMatch = () => {
                 <Button type="default" onClick={handleClearFile}>
                     <CloseOutlined /> 清空上传文件
                 </Button>
-                <Button type="default" onClick={handleResetQuery}>
-                    <ReloadOutlined /> 重置查询
-                </Button>
+
             </Space>
 
             {/* 筛选区域 */}
@@ -498,52 +501,51 @@ const InformationMatch = () => {
                     onChange={handlePlatformGroupFilterChange}
                     mode="multiple"
                     maxTagCount={3}
-                    style={{ width: 200, marginRight: 16, marginBottom: 8 }}
+                    style={{ width: 200, marginRight: 5, marginBottom: 8 }}
                 >
                     <Option key="全部" value="全部">全部</Option>
                     {result?.platformStructure.map((group: any, index: number) => (
-                        // 修复：使用组合键确保唯一性
                         <Option key={`${group.platformGroupName}-${index}`} value={group.platformGroupName}>
                             {group.platformGroupName}
                         </Option>
                     ))}
                 </Select>
-                
-                {/* 平台筛选 */}
+
                 <Select
                     placeholder="选择平台（可多选）"
                     value={platformFilter}
                     onChange={handlePlatformFilterChange}
                     mode="multiple"
                     maxTagCount={3}
-                    style={{ width: 200, marginRight: 16, marginBottom: 8 }}
+                    style={{ width: 200, marginRight: 5, marginBottom: 8 }}
                     disabled={!platformGroupFilter || platformGroupFilter.includes('全部') || platformGroupFilter.length === 0}
                 >
                     {getFilteredPlatforms().map((platformName, index) => (
-                        // 修复：使用组合键确保唯一性
                         <Option key={`${platformName}-${index}`} value={platformName}>
                             {platformName}
                         </Option>
                     ))}
                 </Select>
-                
+
                 <Select
                     placeholder="选择维度（可多选）"
                     value={dimensionFilter}
                     onChange={handleDimensionFilterChange}
                     mode="multiple"
                     maxTagCount={3}
-                    style={{ width: 300, marginRight: 16, marginBottom: 8 }}
+                    style={{ width: 300, marginRight: 5, marginBottom: 8 }}
                 >
                     {result?.excelColumns.map((column: string, index: number) => (
-                        // 修复：使用组合键确保唯一性
                         <Option key={`${column}-${index}`} value={column}>
                             {column}
                         </Option>
                     ))}
                 </Select>
-                <Button type="primary" onClick={handleDimensionQuery} style={{ marginRight: 16, marginBottom: 8 }}>
+                <Button type="primary" onClick={handleDimensionQuery} style={{ marginRight: 5, marginBottom: 8 }}>
                     维度查询
+                </Button>
+                <Button type="default" onClick={handleResetQuery} style={{ marginRight: 5, marginBottom: 8 }}>
+                    <ReloadOutlined /> 重置查询
                 </Button>
                 <Button type="primary" onClick={handleExport} style={{ marginBottom: 8 }}>
                     <DownloadOutlined /> 导出数据
@@ -635,7 +637,7 @@ const InformationMatch = () => {
                 />
             </Modal>
 
-            {/* 统计详情模态框 */}
+            {/* 统计详情模态框（已添加总和显示） */}
             <Modal
                 title={`${statisticsModalTitle} 统计详情`}
                 visible={statisticsModalVisible}
@@ -648,25 +650,31 @@ const InformationMatch = () => {
                     {Object.keys(statisticsModalData).map(dimension => {
                         const dimensionData = statisticsModalData[dimension] || {};
                         const dataArray = Object.entries(dimensionData);
-                        
+
                         return (
                             <TabPane tab={dimension} key={dimension}>
                                 {dataArray.length > 0 ? (
-                                    <Table
-                                        dataSource={dataArray
-                                            .sort((a, b) => b[1] - a[1])
-                                            .map(([key, value]) => ({
-                                                key,
-                                                维度值: key,
-                                                数量: value
-                                            }))}
-                                        columns={[
-                                            { title: '维度值', dataIndex: '维度值', key: '维度值', sorter: (a, b) => a.维度值.localeCompare(b.维度值) },
-                                            { title: '数量', dataIndex: '数量', key: '数量', sorter: (a, b) => a.数量 - b.数量, sortOrder: 'descend' }
-                                        ]}
-                                        rowKey="key"
-                                        pagination={{ pageSize: 10 }}
-                                    />
+                                    <>
+                                        <Table
+                                            dataSource={dataArray
+                                                .sort((a, b) => b[1] - a[1])
+                                                .map(([key, value]) => ({
+                                                    key,
+                                                    维度值: key,
+                                                    数量: value
+                                                }))}
+                                            columns={[
+                                                { title: '维度值', dataIndex: '维度值', key: '维度值', sorter: (a, b) => a.维度值.localeCompare(b.维度值) },
+                                                { title: '数量', dataIndex: '数量', key: '数量', sorter: (a, b) => a.数量 - b.数量, sortOrder: 'descend' }
+                                            ]}
+                                            rowKey="key"
+                                            pagination={{ pageSize: 10 }}
+                                        />
+                                        {/* 显示总和 */}
+                                        <div style={{ padding: 16, backgroundColor: '#f5f5f5', borderRadius: 4, marginTop: 12 }}>
+                                            <div style={{ fontWeight: 'bold' }}>总和: {dimensionTotals[dimension] || 0}</div>
+                                        </div>
+                                    </>
                                 ) : (
                                     <div style={{ padding: 24, textAlign: 'center' }}>
                                         <Empty description="暂无统计数据" />

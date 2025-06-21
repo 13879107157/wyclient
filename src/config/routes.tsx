@@ -28,7 +28,7 @@ export const menuItems = [
         icon: React.createElement(UserOutlined),
         label: '数据分析',
         children: [
-            { key: '7', label: '列表', path: '/DataAnalysis/3++', element: <InformationMatch /> },
+            { key: '7', label: '3++导出数据分析', path: '/DataAnalysis/3++', element: <InformationMatch /> },
             // 可以根据需要添加更多子菜单和对应的页面组件
         ],
     },
