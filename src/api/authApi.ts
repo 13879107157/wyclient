@@ -32,7 +32,7 @@ const register = async (data: RegisterRequest): Promise<void> => {
 };
 
 const getUserInfo = async (userId: number): Promise<void> => {
-    return await axiosInstance.get(`/api/users?id=${userId}`);
+    return await axiosInstance.get(`/api/users/me?id=${userId}`);
 };
 
 

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import { Button, Breadcrumb, Layout, Menu, theme } from 'antd';
+import { LoginOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 import { menuItems } from '../../config/routes';
@@ -13,6 +14,7 @@ const App = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+    const [collapsed, setCollapsed] = useState(false);
     const [openKeys, setOpenKeys] = useState<string[]>([]);
 
     useEffect(() => {
@@ -58,7 +60,7 @@ const App = () => {
         const pathSegments = location.pathname.split('/').filter(segment => segment);
         let currentPath = '';
         let matchedItems: MenuProps['items'] = [];
-        
+
         // 逐级匹配路径，找到最匹配的菜单项
         for (const segment of pathSegments) {
             currentPath += `/${segment}`;
@@ -121,7 +123,7 @@ const App = () => {
         // 首页面包屑
         breadcrumbItems.push({
             title: 'Home',
-            onClick: () => navigate('/')
+            onClick: () => navigate('/DataAnalysis/3++')
         });
 
         const pathSegments = location.pathname.split('/').filter(segment => segment);
@@ -148,21 +150,30 @@ const App = () => {
 
     const breadcrumbItems = generateBreadcrumbItems();
 
+    const getLocalUserInfo = () => {
+        const userInfo = localStorage.getItem('userInfo');
+        return userInfo ? JSON.parse(userInfo) : null;
+    };
+    const userinfo = getLocalUserInfo()
+    console.log(userinfo)
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        navigate('/auth');
+    };
     return (
         <Layout className='layout-mian'>
-            <Header style={{ display: 'flex', alignItems: 'center' }}>
-                <div className="demo-logo" />
-                <Menu
-                    theme="dark"
-                    mode="horizontal"
-                    selectedKeys={selectedKeys}
-                    items={menuItems}
-                    onClick={handleMenuClick}
-                    style={{ flex: 1, minWidth: 0 }}
-                />
+            <Header className='header'>
+
+                <div className='header_title'>网运数据分析系统 v1.0.0</div>
+                <div className='header-right'>
+                    <p className='username'>{userinfo.username}</p>
+                    <Button variant='filled' color='danger' onClick={handleLogout}><LoginOutlined /></Button>
+                </div>
+
             </Header>
             <Layout>
-                <Sider width={200} style={{ background: colorBgContainer }}>
+
+                <Sider width={200} style={{ background: colorBgContainer }} collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)} theme='light'>
                     <Menu
                         mode="inline"
                         selectedKeys={selectedKeys}

@@ -74,7 +74,7 @@ axiosInstance.interceptors.response.use(
                     // 清除本地token
                     localStorage.removeItem('token');
                     // 跳转到登录页
-                    window.location.href = '/login';
+                    window.location.href = '/auth';
                     return Promise.reject(new Error('未授权'));
                 default:
                     showMessage(errorMessage);

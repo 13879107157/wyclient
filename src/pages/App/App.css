@@ -1,16 +1,41 @@
 #root {
-  margin: 0 auto;
-  text-align: center;
-  /* height: 100vh; */
-  /* background: #000; */
+    margin: 0 auto;
+    text-align: center;
+    /* height: 100vh; */
+    /* background: #000; */
 }
-.layout-mian{
+
+.layout-mian {
     height: 100vh;
 }
 
-.page-title{
+.page-title {
     font-size: 14px;
     text-align: left;
     border-bottom: 1px solid #f3f4f5;
     margin-bottom: 10px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0px 10px;
+}
+
+.header_title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+
+}
+
+.header-right .username {
+    color: #fff;
+    margin: 10px;
 }

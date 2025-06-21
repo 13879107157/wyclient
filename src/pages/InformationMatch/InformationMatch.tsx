@@ -17,7 +17,9 @@ import {
     InboxOutlined,
     CloseOutlined,
     DownloadOutlined,
-    ReloadOutlined
+    ReloadOutlined,
+    ControlTwoTone,
+    CloudUploadOutlined
 } from '@ant-design/icons';
 import { processExcelMatching, type ExcelMatchingParams } from '../../api/InformationMatchingApi';
 import * as XLSX from 'xlsx';
@@ -28,9 +30,36 @@ const { Dragger } = Upload;
 const { Option } = Select;
 const { TabPane } = Tabs;
 
+// 定义数据类型
+type Platform = {
+    platformId: string;
+    platformName: string;
+    platformTypeName: string;
+    matchCount: number;
+    matchedData: any[];
+    statistics: Record<string, Record<string, number>>;
+};
+
+type PlatformGroup = {
+    platformGroupId: string;
+    platformGroupName: string;
+    order: number;
+    matchCount: number;
+    platformGroupChildren: Platform[];
+};
+
+type ResultData = {
+    platformStructure: PlatformGroup[];
+    excelColumns: string[];
+};
+
+// 导入Upload组件类型
+type UploadComponent = React.ComponentType<UploadProps>;
+type UploadProps = Parameters<typeof Upload>[0];
+
 const InformationMatch = () => {
     const [file, setFile] = useState<File | null>(null);
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<ResultData | null>(null);
     const [platformGroupFilter, setPlatformGroupFilter] = useState<string[] | null>(null);
     const [platformFilter, setPlatformFilter] = useState<string[] | null>(null);
     const [dimensionFilter, setDimensionFilter] = useState<string[] | null>(null);
@@ -39,16 +68,18 @@ const InformationMatch = () => {
     const [dataModalTotal, setDataModalTotal] = useState(0);
     const [dataModalCurrentPage, setDataModalCurrentPage] = useState(1);
     const [statisticsModalVisible, setStatisticsModalVisible] = useState(false);
-    const [statisticsModalData, setStatisticsModalData] = useState<any>({});
+    const [statisticsModalData, setStatisticsModalData] = useState<Record<string, Record<string, number>>>({});
     const [statisticsModalTitle, setStatisticsModalTitle] = useState<string>('');
     const [selectedStatisticsKey, setSelectedStatisticsKey] = useState<string>('');
-    const [dimensionTotals, setDimensionTotals] = useState({}); // 存储各维度总和
+    const [dimensionTotals, setDimensionTotals] = useState<Record<string, number>>({}); // 存储各维度总和
     const chartRef = useRef<HTMLDivElement>(null);
     const [loadingData, setLoadingData] = useState(false);
-    const [originalResult, setOriginalResult] = useState<any>(null);
+    const [originalResult, setOriginalResult] = useState<ResultData | null>(null);
+    const uploadRef = useRef<UploadComponent>(null); // 添加uploadRef
 
     // 处理文件上传
-    const handleUpload = async () => {
+    const handleUpload = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
         console.log('handleUpload file:', file);
         if (file) {
             const params: ExcelMatchingParams = {
@@ -66,6 +97,7 @@ const InformationMatch = () => {
                 setPlatformFilter(null);
                 setDimensionFilter(null);
             } catch (error) {
+                console.error('上传失败:', error);
                 message.error('上传失败，请稍后重试');
             } finally {
                 setLoadingData(false);
@@ -76,7 +108,8 @@ const InformationMatch = () => {
     };
 
     // 清空文件并清除相关数据
-    const handleClearFile = () => {
+    const handleClearFile = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
         setFile(null);
         setResult(null);
         setOriginalResult(null);
@@ -84,10 +117,8 @@ const InformationMatch = () => {
         setPlatformFilter(null);
         setDimensionFilter(null);
 
-        const uploadComponent = document.querySelector('.ant-upload-list');
-        if (uploadComponent) {
-            uploadComponent.innerHTML = '';
-        }
+        // 使用ref来控制Upload组件，而不是直接操作DOM
+        uploadRef.current?.clearFiles();
 
         message.success('已清空上传文件和相关数据');
     };
@@ -148,7 +179,7 @@ const InformationMatch = () => {
     };
 
     // 根据当前筛选条件计算统计数据
-    const calculateFilteredStatistics = () => {
+    const calculateFilteredStatistics = (): Record<string, Record<string, number>> => {
         if (!originalResult || !dimensionFilter || dimensionFilter.length === 0) return {};
 
         let filteredGroups = originalResult.platformStructure;
@@ -165,7 +196,7 @@ const InformationMatch = () => {
             );
         }
 
-        const statistics = {};
+        const statistics: Record<string, Record<string, number>> = {};
 
         dimensionFilter.forEach(dimension => {
             statistics[dimension] = {};
@@ -203,7 +234,7 @@ const InformationMatch = () => {
     };
 
     // 查看统计（已添加总和计算）
-    const handleViewStatistics = (statistics: any, title: string, key?: string) => {
+    const handleViewStatistics = (statistics: Record<string, Record<string, number>>, title: string, key?: string) => {
         console.log("handleViewStatistics", statistics);
 
         const hasData = Object.keys(statistics).some(dimension =>
@@ -216,14 +247,14 @@ const InformationMatch = () => {
         }
 
         // 计算每个维度的总和
-        const dimensionTotals = {};
+        const dimensionTotals: Record<string, number> = {};
         Object.keys(statistics).forEach(dimension => {
             const dimensionData = statistics[dimension] || {};
             const total = Object.values(dimensionData).reduce((sum, value) => sum + (Number(value) || 0), 0);
             dimensionTotals[dimension] = total;
         });
 
-        const sortedStatistics = {};
+        const sortedStatistics: Record<string, Record<string, number>> = {};
         Object.keys(statistics).forEach(dimension => {
             const dimensionData = statistics[dimension] || {};
             const sortedData = Object.entries(dimensionData)
@@ -242,7 +273,7 @@ const InformationMatch = () => {
     // 导出数据
     const handleExport = () => {
         if (result) {
-            const filteredPlatformStructure = result.platformStructure.filter((group: any) =>
+            const filteredPlatformStructure = result.platformStructure.filter((group: PlatformGroup) =>
                 !platformGroupFilter ||
                 platformGroupFilter.includes('全部') ||
                 platformGroupFilter.includes(group.platformGroupName)
@@ -255,13 +286,13 @@ const InformationMatch = () => {
             }));
 
             const dataToExport = [];
-            filteredPlatformStructure.forEach((group: any) => {
+            filteredPlatformStructure.forEach((group: PlatformGroup) => {
                 dataToExport.push({
                     '平台组名称': group.platformGroupName,
                     '排序': group.order,
                     '匹配数量': group.matchCount
                 });
-                group.platformGroupChildren.forEach((platform: any) => {
+                group.platformGroupChildren.forEach((platform: Platform) => {
                     dataToExport.push({
                         '平台名称': platform.platformName,
                         '匹配数量': platform.matchCount,
@@ -292,7 +323,7 @@ const InformationMatch = () => {
     };
 
     // 渲染图表
-    const renderChart = (statistics: any) => {
+    const renderChart = (statistics: Record<string, Record<string, number>>) => {
         if (chartRef.current && statistics && dimensionFilter && dimensionFilter.length > 0) {
             const myChart = echarts.init(chartRef.current);
 
@@ -365,7 +396,7 @@ const InformationMatch = () => {
         { title: '匹配数量', dataIndex: 'matchCount', key: 'matchCount' },
         {
             title: '查看统计', key: 'viewStatistics',
-            render: (_, record) => (
+            render: (_, record: PlatformGroup) => (
                 <Tooltip title="查看平台组的statistics数据统计">
                     <Button type="link" onClick={() => handleViewStatistics(record.statistics, record.platformGroupName)}>
                         查看统计
@@ -382,7 +413,7 @@ const InformationMatch = () => {
         { title: '平台类型名称', dataIndex: 'platformTypeName', key: 'platformTypeName' },
         {
             title: '查看数据', key: 'viewData',
-            render: (_, record) => (
+            render: (_: any, record: Platform) => (
                 <Tooltip title="查看平台的matchedData所有数据">
                     <Button type="link" onClick={() => handleViewData(record.matchedData, record.total)}>
                         查看数据
@@ -392,7 +423,7 @@ const InformationMatch = () => {
         },
         {
             title: '查看统计', key: 'viewSubStatistics',
-            render: (_, record) => (
+            render: (_: any, record: Platform) => (
                 <Tooltip title="查看平台的statistics数据统计">
                     <Button type="link" onClick={() => handleViewStatistics(record.statistics, record.platformName)}>
                         查看统计
@@ -404,7 +435,7 @@ const InformationMatch = () => {
 
     // 筛选后的平台组数据
     const filteredPlatformStructure = result
-        ? result.platformStructure.filter((group: any) =>
+        ? result.platformStructure.filter((group: PlatformGroup) =>
             !platformGroupFilter ||
             platformGroupFilter.includes('全部') ||
             platformGroupFilter.includes(group.platformGroupName)
@@ -449,23 +480,29 @@ const InformationMatch = () => {
 
     return (
         <div className="information-match-container">
-             <div className="page-title">
+            <div className="page-title">
                 <h1>
                     3++导出数据分析
                 </h1>
             </div>
-            {/* 拖拽上传区域 */}
+            {/* 拖拽上传区域 - 限制只允许上传一个文件 */}
             <Dragger
+                ref={uploadRef} // 添加ref
                 accept=".xlsx,.xls"
+                maxCount={1} // 限制只允许上传一个文件
                 beforeUpload={(file) => {
                     console.log('beforeUpload file:', file);
+                    // 阻止自动上传
                     return false;
                 }}
                 onChange={(info) => {
                     const { fileList } = info;
 
-                    if (fileList.length > 0) {
-                        const latestFile = fileList[fileList.length - 1];
+                    // 确保只保留最新上传的文件
+                    const filteredFileList = fileList.slice(-1);
+
+                    if (filteredFileList.length > 0) {
+                        const latestFile = filteredFileList[0];
                         if (latestFile && latestFile.originFileObj) {
                             setFile(latestFile.originFileObj);
                             console.log('✅ 文件状态已更新:', latestFile.originFileObj);
@@ -474,6 +511,9 @@ const InformationMatch = () => {
                         setFile(null);
                         console.log('文件已移除');
                     }
+
+                    // 更新文件列表，确保只显示一个文件
+                    return { fileList: filteredFileList };
                 }}
             >
                 <p className="ant-upload-drag-icon">
@@ -481,30 +521,32 @@ const InformationMatch = () => {
                 </p>
                 <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
                 <p className="ant-upload-hint">支持 .xlsx 和 .xls 格式文件</p>
+                <Space style={{ marginTop: 16 }}>
+                    <Button variant='solid' color='geekblue' onClick={handleUpload} loading={loadingData}>
+                        <CloudUploadOutlined />
+                        确认上传
+                    </Button>
+                    <Button variant='dashed' color='danger' onClick={handleClearFile}>
+                        <CloseOutlined /> 清空上传文件
+                    </Button>
+                </Space>
             </Dragger>
 
-            <Space style={{ marginTop: 16 }}>
-                <Button type="primary" onClick={handleUpload} loading={loadingData}>
-                    确认上传
-                </Button>
-                <Button type="default" onClick={handleClearFile}>
-                    <CloseOutlined /> 清空上传文件
-                </Button>
 
-            </Space>
 
             {/* 筛选区域 */}
             <Space style={{ marginTop: 16, width: '100%', display: 'flex', flexWrap: 'wrap' }}>
                 <Select
+                    allowClear
                     placeholder="选择平台组（可多选）"
                     value={platformGroupFilter}
                     onChange={handlePlatformGroupFilterChange}
                     mode="multiple"
-                    maxTagCount={3}
+                    maxTagCount={2}
                     style={{ width: 200, marginRight: 5, marginBottom: 8 }}
                 >
                     <Option key="全部" value="全部">全部</Option>
-                    {result?.platformStructure.map((group: any, index: number) => (
+                    {result?.platformStructure.map((group: PlatformGroup, index: number) => (
                         <Option key={`${group.platformGroupName}-${index}`} value={group.platformGroupName}>
                             {group.platformGroupName}
                         </Option>
@@ -512,12 +554,14 @@ const InformationMatch = () => {
                 </Select>
 
                 <Select
+                    allowClear
+                    popupMatchSelectWidth
                     placeholder="选择平台（可多选）"
                     value={platformFilter}
                     onChange={handlePlatformFilterChange}
                     mode="multiple"
-                    maxTagCount={3}
-                    style={{ width: 200, marginRight: 5, marginBottom: 8 }}
+                    maxTagCount={1}
+                    style={{ width: 210, marginRight: 5, marginBottom: 8 }}
                     disabled={!platformGroupFilter || platformGroupFilter.includes('全部') || platformGroupFilter.length === 0}
                 >
                     {getFilteredPlatforms().map((platformName, index) => (
@@ -532,8 +576,8 @@ const InformationMatch = () => {
                     value={dimensionFilter}
                     onChange={handleDimensionFilterChange}
                     mode="multiple"
-                    maxTagCount={3}
-                    style={{ width: 300, marginRight: 5, marginBottom: 8 }}
+                    maxTagCount={1}
+                    style={{ width: 220, marginRight: 5, marginBottom: 8 }}
                 >
                     {result?.excelColumns.map((column: string, index: number) => (
                         <Option key={`${column}-${index}`} value={column}>
@@ -542,12 +586,13 @@ const InformationMatch = () => {
                     ))}
                 </Select>
                 <Button type="primary" onClick={handleDimensionQuery} style={{ marginRight: 5, marginBottom: 8 }}>
+                    <ControlTwoTone />
                     维度查询
                 </Button>
                 <Button type="default" onClick={handleResetQuery} style={{ marginRight: 5, marginBottom: 8 }}>
                     <ReloadOutlined /> 重置查询
                 </Button>
-                <Button type="primary" onClick={handleExport} style={{ marginBottom: 8 }}>
+                <Button variant="solid" color='green' onClick={handleExport} style={{ marginBottom: 8 }}>
                     <DownloadOutlined /> 导出数据
                 </Button>
             </Space>
