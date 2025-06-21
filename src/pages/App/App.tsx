@@ -1,8 +1,8 @@
-// NOD-client/src/pages/App/App.tsx
+// wyclient/src/pages/App/App.tsx
 import { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import { Button, Breadcrumb, Layout, Menu, theme } from 'antd';
-import { LoginOutlined } from '@ant-design/icons'
+import { LoginOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 import { menuItems } from '../../config/routes';
@@ -32,10 +32,11 @@ const App = () => {
             navigate('/auth');
         } else {
             checkToken();
+            // navigate('/');
         }
     }, [navigate]);
 
-    // 监听路由变化，更新菜单选中状态
+    // 监听路由变化，更新菜单选中状态和浏览器标题
     useEffect(() => {
         // 查找当前路径匹配的菜单项
         const findMenuItem = (path: string, menuList: MenuProps['items']): MenuProps['items'] => {
@@ -76,6 +77,11 @@ const App = () => {
             setSelectedKeys([matchedItems[matchedItems.length - 1].key]);
             // @ts-ignore
             setOpenKeys(matchedItems.slice(0, -1).map(item => item.key));
+            
+            // 设置浏览器标题
+            // @ts-ignore
+            const pageTitle = matchedItems[matchedItems.length - 1].label || '网运数据分析系统';
+            document.title = pageTitle;
         }
     }, [location.pathname]);
 
@@ -154,25 +160,25 @@ const App = () => {
         const userInfo = localStorage.getItem('userInfo');
         return userInfo ? JSON.parse(userInfo) : null;
     };
-    const userinfo = getLocalUserInfo()
-    console.log(userinfo)
+    
+    const userinfo = getLocalUserInfo();
+    console.log(userinfo);
+    
     const handleLogout = () => {
         localStorage.removeItem('token');
         navigate('/auth');
     };
+    
     return (
         <Layout className='layout-mian'>
             <Header className='header'>
-
                 <div className='header_title'>网运数据分析系统 v1.0.0</div>
                 <div className='header-right'>
-                    {/* <p className='username'>{userinfo.username}</p> */}
+                    <p className='username'>{userinfo.username}</p>
                     <Button variant='filled' color='danger' onClick={handleLogout}><LoginOutlined /></Button>
                 </div>
-
             </Header>
             <Layout>
-
                 <Sider width={200} style={{ background: colorBgContainer }} collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)} theme='light'>
                     <Menu
                         mode="inline"
@@ -181,7 +187,7 @@ const App = () => {
                         style={{ height: '100%', borderRight: 0 }}
                         items={menuItems}
                         onClick={handleMenuClick}
-                        onOpenChange={handleOpenChange} // 添加菜单组展开/折叠事件处理
+                        onOpenChange={handleOpenChange}
                     />
                 </Sider>
                 <Layout style={{ padding: '0 24px 24px' }}>

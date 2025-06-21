@@ -43,3 +43,14 @@ export const routes: RouteObject[] = menuItems.flatMap((item) =>
         element: child.element,
     }))
 );
+// 辅助函数：根据路径查找标题
+export const findTitleByPath = (path: string) => {
+    for (const menu of menuItems) {
+        for (const child of menu.children) {
+            if (child.path === path) {
+                return child.label;
+            }
+        }
+    }
+    return '默认标题';
+};

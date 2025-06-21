@@ -21,7 +21,7 @@ const AuthPage = () => {
                 const UserInfoResponse = await getUserInfo(response.user.id)
                 console.log(UserInfoResponse)
                 localStorage.setItem('userInfo', JSON.stringify(UserInfoResponse))
-                window.location.href = '#/DataAnalysis/3++';
+                window.location.href = '/';
             } else {
                 const registerData: RegisterRequest = {
                     username: values.username,
