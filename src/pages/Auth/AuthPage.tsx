@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Button, Form, Input } from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { login, register, getUserInfo, type LoginRequest, type RegisterRequest } from '../../api/authApi';
@@ -21,7 +21,7 @@ const AuthPage = () => {
                 const UserInfoResponse = await getUserInfo(response.user.id)
                 console.log(UserInfoResponse)
                 localStorage.setItem('userInfo', JSON.stringify(UserInfoResponse))
-                window.location.href = '/DataAnalysis/3++';
+                window.location.href = '#/DataAnalysis/3++';
             } else {
                 const registerData: RegisterRequest = {
                     username: values.username,

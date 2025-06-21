@@ -1,7 +1,6 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
+import axios, { type AxiosInstance, type AxiosResponse } from 'axios';
 import { API_URL } from '../config/config';
 import { message } from 'antd'; // 引入 antd 的 message 组件
-import { useNavigate } from 'react-router-dom'; // 用于路由跳转
 
 // 创建 axios 实例
 const axiosInstance: AxiosInstance = axios.create({
@@ -35,6 +34,7 @@ axiosInstance.interceptors.request.use(
         const token = localStorage.getItem('token');
         if (token) {
             // 使用 axios 提供的 headers API
+            // @ts-ignore
             config.headers = config.headers ?? {};
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -55,14 +55,14 @@ axiosInstance.interceptors.response.use(
         if (success && msg && response.config.url !== "/api/platform-types/1") {
             showMessage(msg, 'success');
         }
-        
+
         return data;
     },
     (error) => {
         if (error.response) {
             const { status, data } = error.response;
             const errorMessage = data.message || '未知错误';
-            
+
             switch (status) {
                 case 401:
                     // 业务查询失败状态

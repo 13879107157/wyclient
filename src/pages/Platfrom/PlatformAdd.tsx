@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { Form, Input, Select, InputNumber, Button, Space, Col, Row } from 'antd';
-import { createPlatform, type Platform } from '../../api/platformApi';
+import { createPlatform } from '../../api/platformApi';
 import { getAllPlatformGroups } from '../../api/platformGroupApi';
 import { getAllPlatformTypes } from '../../api/platFromTypeApi';
 import { useNavigate } from 'react-router-dom';

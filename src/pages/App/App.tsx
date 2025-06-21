@@ -1,5 +1,5 @@
 // NOD-client/src/pages/App/App.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import { Button, Breadcrumb, Layout, Menu, theme } from 'antd';
 import { LoginOutlined } from '@ant-design/icons'
@@ -166,7 +166,7 @@ const App = () => {
 
                 <div className='header_title'>网运数据分析系统 v1.0.0</div>
                 <div className='header-right'>
-                    <p className='username'>{userinfo.username}</p>
+                    {/* <p className='username'>{userinfo.username}</p> */}
                     <Button variant='filled' color='danger' onClick={handleLogout}><LoginOutlined /></Button>
                 </div>
 

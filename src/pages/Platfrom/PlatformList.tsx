@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Table, Input, Button, message, Space, Popconfirm } from 'antd';
 import {
     getAllPlatforms,
@@ -14,6 +14,7 @@ const PlatformList = () => {
     const [rawPlatformGroups, setRawPlatformGroups] = useState<any[]>([]);
     const [rawPlatformTypes, setRawPlatformTypes] = useState<any[]>([]);
     const [searchText, setSearchText] = useState('');
+    // @ts-ignore
     const [loading, setLoading] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [currentPlatform, setCurrentPlatform] = useState<Platform | null>(null);

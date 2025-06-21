@@ -1,4 +1,3 @@
-import React from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { createPlatformType } from '../../api/platFromTypeApi';
 import { useNavigate } from 'react-router-dom';

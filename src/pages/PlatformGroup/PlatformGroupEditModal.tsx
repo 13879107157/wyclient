@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Modal, Form, Input, Select, Button } from 'antd';
+import { useState } from 'react';
+import { Modal, Form, Input, Select } from 'antd';
 import { updatePlatformGroup, type PlatformGroup } from '../../api/platformGroupApi';
 
 const { Option } = Select;

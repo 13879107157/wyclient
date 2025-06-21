@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { Table, Input, Button, message, Popconfirm } from 'antd';
 import { getAllPlatformTypes, deletePlatformType } from '../../api/platFromTypeApi';
 import PlatformTypeEditModal from './PlatformTypeEditModal';

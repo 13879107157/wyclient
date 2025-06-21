@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Modal, Form, Input, Button } from 'antd';
+import  { useState } from 'react';
+import { Modal, Form, Input } from 'antd';
 import { updatePlatformType } from '../../api/platFromTypeApi';
 
 interface PlatformTypeEditModalProps {

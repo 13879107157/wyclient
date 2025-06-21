@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { Modal, Form, Input, Select, InputNumber, Button, Space} from 'antd';
 import { updatePlatform, type Platform } from '../../api/platformApi';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
