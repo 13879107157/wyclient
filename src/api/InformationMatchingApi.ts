@@ -61,12 +61,11 @@ const processExcelMatching = async (params: ExcelMatchingParams) => {
         }
 
         // 调用后端接口（注意：axiosInstance已在响应拦截器中处理了错误和返回data）
-        const response = await axiosInstance.post('/api/excelMatching', formData);
-        const result: ExcelMatchingResult = response.data;
+        const result: ExcelMatchingResult = await axiosInstance.post('/api/excelMatching', formData);
 
         // 计算匹配和未匹配行数
 
-
+        console.log(result)
         // 扩展返回数据，添加匹配和未匹配行数
         return result;
     } catch (error) {
