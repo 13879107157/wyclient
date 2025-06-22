@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Table, Input, Button, message, Space, Popconfirm } from 'antd';
+import { Table, Input, Button, message, Space, Popconfirm, Tag } from 'antd';
 import {
     getAllPlatforms,
     deletePlatform,
@@ -154,14 +154,23 @@ const PlatformList = () => {
     // 主表列定义
     const mainColumns = [
         {
+            title: '平台组名称',
+            dataIndex: 'name',
+            key: 'name',
+        },
+        {
             title: '平台组ID',
             dataIndex: 'id',
             key: 'id',
         },
+
         {
-            title: '平台组名称',
-            dataIndex: 'name',
-            key: 'name',
+            title: '平台数量',
+            key: 'platformCount',
+            render: (_, record) => {
+                const count = groupedPlatforms[record.id]?.length || 0;
+                return <Tag color="blue">{count}</Tag>;
+            },
         },
     ];
 
@@ -264,9 +273,12 @@ const PlatformList = () => {
                                     dataSource={platformsInGroup}
                                     columns={subColumns}
                                     pagination={false}
+                                    size="small"
                                 />
                             );
                         },
+                        rowExpandable: (record) => groupedPlatforms[record.id]?.length > 0,
+                        defaultExpandedRowKeys: [], // 默认不展开任何行
                     }}
                 />
             )}

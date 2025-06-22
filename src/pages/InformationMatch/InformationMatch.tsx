@@ -25,6 +25,7 @@ import { processExcelMatching, type ExcelMatchingParams } from '../../api/Inform
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import * as echarts from 'echarts';
+// import type { number } from 'echarts/core';
 
 const { Dragger } = Upload;
 const { Option } = Select;
@@ -51,6 +52,9 @@ type PlatformGroup = {
 type ResultData = {
     platformStructure: PlatformGroup[];
     excelColumns: string[];
+    globalStatistics: Object,
+    totalRows: number
+
 };
 
 // 导入Upload组件类型
@@ -550,6 +554,7 @@ const InformationMatch = () => {
                     placeholder="选择平台组（可多选）"
                     value={platformGroupFilter}
                     onChange={handlePlatformGroupFilterChange}
+                    defaultValue={['全部']}
                     mode="multiple"
                     maxTagCount={2}
                     style={{ width: 200, marginRight: 5, marginBottom: 8 }}
@@ -634,7 +639,7 @@ const InformationMatch = () => {
 
             {/* 表格展示 */}
             {result && (
-                <Card title="平台数据" style={{ marginTop: 16 }}>
+                <Card title={'平台数据总计：' + result.totalRows} style={{ marginTop: 16 }}>
                     <Table
                         dataSource={filteredPlatformStructure}
                         columns={mainTableColumns}
