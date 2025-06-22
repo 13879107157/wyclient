@@ -39,7 +39,9 @@ const PlatformList = () => {
             name: type.name || type.title || type.type_name || '未知类型',
         }));
     }, [rawPlatformTypes]);
-    // 创建映射表
+
+    //@ts-ignore
+    // 创建映射表 
     const platformGroupMap = useMemo(() => {
         return platformGroups.reduce((map, group) => {
             map[group.id] = group.name;
@@ -66,7 +68,6 @@ const PlatformList = () => {
         setPlatformsLoading(true);
         try {
             const platforms = await getAllPlatforms();
-            // console.log('Fetched platforms:', platforms);
             setPlatforms(platforms);
         } catch (error) {
             message.error('获取平台列表失败');
@@ -80,7 +81,6 @@ const PlatformList = () => {
         setGroupsLoading(true);
         try {
             const groups = await getAllPlatformGroups();
-            // console.log('Fetched raw platform groups:', groups);
             setRawPlatformGroups(groups);
         } catch (error) {
             console.error('获取平台组列表失败:', error);
@@ -94,7 +94,6 @@ const PlatformList = () => {
         setTypesLoading(true);
         try {
             const types = await getAllPlatformTypes();
-            // console.log('Fetched raw platform types:', types);
             setRawPlatformTypes(types);
         } catch (error) {
             console.error('获取平台类型列表失败:', error);
@@ -121,7 +120,7 @@ const PlatformList = () => {
 
     // 处理编辑
     const handleEdit = (platform: Platform) => {
-        console.log("platform数据", platform)
+        console.log("platform数据", platform);
         setCurrentPlatform(platform);
         setEditModalVisible(true);
     };
@@ -133,14 +132,41 @@ const PlatformList = () => {
         message.success('更新成功');
     };
 
-    // 过滤搜索结果
-    const filteredPlatforms = platforms.filter(platform =>
-        platform.name.includes(searchText) ||
-        platform.description.includes(searchText)
-    );
+    // 过滤搜索结果（修复空值问题）
+    const filteredPlatforms = platforms.filter(platform => {
+        const name = platform.name || '';
+        const description = platform.description || '';
+        return name.includes(searchText) || description.includes(searchText);
+    });
 
-    // 表格列定义
-    const columns = [
+    // 按平台组 ID 分组
+    const groupedPlatforms = useMemo(() => {
+        const groups: Record<number, Platform[]> = {};
+        filteredPlatforms.forEach(platform => {
+            if (!groups[platform.platform_group_id]) {
+                groups[platform.platform_group_id] = [];
+            }
+            groups[platform.platform_group_id].push(platform);
+        });
+        return groups;
+    }, [filteredPlatforms]);
+
+    // 主表列定义
+    const mainColumns = [
+        {
+            title: '平台组ID',
+            dataIndex: 'id',
+            key: 'id',
+        },
+        {
+            title: '平台组名称',
+            dataIndex: 'name',
+            key: 'name',
+        },
+    ];
+
+    // 子表列定义
+    const subColumns = [
         {
             title: 'ID',
             dataIndex: 'id',
@@ -152,20 +178,8 @@ const PlatformList = () => {
             key: 'name',
         },
         {
-            title: '平台组',
-            key: 'platform_group_id',
-            // @ts-ignore
-            render: (_, record) => {
-                if (groupsLoading) return '加载中...';
-                const groupId = record.platform_group_id;
-                const groupName = platformGroupMap[groupId] || '-';
-                return `${groupName}-[平台组ID:${groupId}]`;
-            },
-        },
-        {
             title: '平台类型',
             key: 'platform_type_id',
-            // @ts-ignore
             render: (_, record) => {
                 if (typesLoading) return '加载中...';
                 const typeId = record.platform_type_id;
@@ -186,7 +200,6 @@ const PlatformList = () => {
         {
             title: '操作',
             key: 'action',
-            // @ts-ignore
             render: (_, record) => (
                 <Space size="middle">
                     <Button type="primary" size="small" onClick={() => handleEdit(record)}>
@@ -215,9 +228,7 @@ const PlatformList = () => {
     return (
         <div>
             <div className="page-title">
-                <h1>
-                    平台列表
-                </h1>
+                <h1>平台列表</h1>
             </div>
             <Input.Search
                 placeholder="搜索平台"
@@ -233,18 +244,30 @@ const PlatformList = () => {
                 </div>
             )}
 
-            {isDataLoaded && platforms.length === 0 && (
+            {isDataLoaded && Object.keys(groupedPlatforms).length === 0 && (
                 <div className="text-center py-10">
                     <p className="text-gray-500">暂无平台数据</p>
                 </div>
             )}
 
-            {isDataLoaded && platforms.length > 0 && (
+            {isDataLoaded && Object.keys(groupedPlatforms).length > 0 && (
                 <Table
-                    dataSource={filteredPlatforms}
-                    columns={columns}
+                    dataSource={platformGroups}
+                    columns={mainColumns}
                     loading={loading}
                     rowKey="id"
+                    expandable={{
+                        expandedRowRender: (record) => {
+                            const platformsInGroup = groupedPlatforms[record.id] || [];
+                            return (
+                                <Table
+                                    dataSource={platformsInGroup}
+                                    columns={subColumns}
+                                    pagination={false}
+                                />
+                            );
+                        },
+                    }}
                 />
             )}
 

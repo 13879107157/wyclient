@@ -1,4 +1,4 @@
-// NOD-client/src/main.tsx
+// wyclient/src/main.tsx
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';

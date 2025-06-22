@@ -9,6 +9,7 @@ import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 const { Option } = Select;
 
 const PlatformAdd = () => {
+    // @ts-ignore
     const navigate = useNavigate();
     const [form] = Form.useForm();
     const [platformGroups, setPlatformGroups] = useState<any[]>([]);
@@ -98,7 +99,7 @@ const PlatformAdd = () => {
                 onFinish={handleSubmit}
                 layout="vertical"
                 scrollToFirstError
-                initialValues={{ order: 100 }}
+                initialValues={{ order: 255 }}
                 labelCol={{ span: 5 }}
                 style={{
                     width: '800px',

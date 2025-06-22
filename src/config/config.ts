@@ -1,7 +1,7 @@
 // 接口地址配置
 const API_BASE_URL = {
-  development: 'http://192.168.32.7:8181',
-  test: 'http://192.168.32.7:8181',
+  development: 'http://localhost:8181',
+  test: 'http://47.101.221.58:8182',
   production: 'http://192.168.32.7:8181'
 };
 

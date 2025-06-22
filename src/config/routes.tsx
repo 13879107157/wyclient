@@ -1,7 +1,7 @@
-// NOD-client/src/routes.ts
+// wyclient/src/config/routes.tsx
 import React from 'react';
 import { TagsOutlined, FolderOutlined , FileTextOutlined, RadarChartOutlined, EditOutlined, PieChartOutlined } from '@ant-design/icons';
-import { type RouteObject } from 'react-router-dom';
+import { type RouteObject, Navigate } from 'react-router-dom';
 import { PlatFormTypeAdd, PlatFormTypeList } from '../pages/PlatFormType/PlatFormType'
 import { PlatformGroupList, PlatformGroupAdd } from '../pages/PlatformGroup/PlatformGroup'
 import { PlatformList, PlatformAdd } from '../pages/Platfrom/Platfrom'
@@ -32,17 +32,23 @@ export const menuItems = [
             // 可以根据需要添加更多子菜单和对应的页面组件
         ],
     },
-
     // 可以添加更多主菜单
 ];
 
 // 定义路由对象
-export const routes: RouteObject[] = menuItems.flatMap((item) =>
-    item.children.map((child) => ({
-        path: child.path,
-        element: child.element,
-    }))
-);
+export const routes: RouteObject[] = [
+    {
+        path: "/",
+        element: <Navigate to="/DataAnalysis/3++" replace />,
+    },
+    ...menuItems.flatMap((item) =>
+        item.children.map((child) => ({
+            path: child.path,
+            element: child.element,
+        }))
+    ),
+];
+
 // 辅助函数：根据路径查找标题
 export const findTitleByPath = (path: string) => {
     for (const menu of menuItems) {

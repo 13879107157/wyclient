@@ -87,7 +87,7 @@ const PlatformGroupList = () => {
             title: '状态',
             dataIndex: 'status',
             key: 'status',
-            render: (status) => <span>{status === 1 ? '启用' : '禁用'}</span>,
+            render: (status) => <span>{status === true ? '启用' : '禁用'}</span>,
         },
         {
             title: '排序',

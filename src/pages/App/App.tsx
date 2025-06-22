@@ -77,7 +77,7 @@ const App = () => {
             setSelectedKeys([matchedItems[matchedItems.length - 1].key]);
             // @ts-ignore
             setOpenKeys(matchedItems.slice(0, -1).map(item => item.key));
-            
+
             // 设置浏览器标题
             // @ts-ignore
             const pageTitle = matchedItems[matchedItems.length - 1].label || '网运数据分析系统';
@@ -155,26 +155,29 @@ const App = () => {
     };
 
     const breadcrumbItems = generateBreadcrumbItems();
-
+    let userinfo = {
+        username: 'admin'
+    }
     const getLocalUserInfo = () => {
         const userInfo = localStorage.getItem('userInfo');
         return userInfo ? JSON.parse(userInfo) : null;
     };
-    
-    const userinfo = getLocalUserInfo();
-    console.log(userinfo);
-    
+    try {
+        userinfo = getLocalUserInfo();
+    } catch (error) {
+    }
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         navigate('/auth');
     };
-    
+
     return (
         <Layout className='layout-mian'>
             <Header className='header'>
                 <div className='header_title'>网运数据分析系统 v1.0.0</div>
                 <div className='header-right'>
-                    <p className='username'>{userinfo.username}</p>
+                    <p className='username'>{userinfo ? userinfo.username : '11'}</p>
                     <Button variant='filled' color='danger' onClick={handleLogout}><LoginOutlined /></Button>
                 </div>
             </Header>
