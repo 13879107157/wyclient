@@ -234,6 +234,11 @@ const PlatformList = () => {
     // 所有数据加载完成状态
     const isDataLoaded = !platformsLoading && !groupsLoading && !typesLoading;
 
+    // 获取所有平台组的 id 作为默认展开的行键
+    const defaultExpandedRowKeys = useMemo(() => {
+        return platformGroups.map(group => group.id);
+    }, [platformGroups]);
+
     return (
         <div>
             <div className="page-title">
@@ -278,7 +283,7 @@ const PlatformList = () => {
                             );
                         },
                         rowExpandable: (record) => groupedPlatforms[record.id]?.length > 0,
-                        defaultExpandedRowKeys: [], // 默认不展开任何行
+                        defaultExpandedRowKeys: defaultExpandedRowKeys, // 默认展开所有行
                     }}
                 />
             )}

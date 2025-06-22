@@ -25,7 +25,6 @@ import { processExcelMatching, type ExcelMatchingParams } from '../../api/Inform
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import * as echarts from 'echarts';
-// import type { number } from 'echarts/core';
 
 const { Dragger } = Upload;
 const { Option } = Select;
@@ -54,7 +53,6 @@ type ResultData = {
     excelColumns: string[];
     globalStatistics: Object,
     totalRows: number
-
 };
 
 // 导入Upload组件类型
@@ -185,7 +183,7 @@ const InformationMatch = () => {
         }
     };
 
-    // 根据当前筛选条件计算统计数据
+    // 根据当前筛选条件计算统计数据，并更新平台组匹配数量
     const calculateFilteredStatistics = (): Record<string, Record<string, number>> => {
         if (!originalResult || !dimensionFilter || dimensionFilter.length === 0) return {};
 
@@ -205,6 +203,18 @@ const InformationMatch = () => {
 
         const statistics: Record<string, Record<string, number>> = {};
 
+        // 更新平台组匹配数量
+        const updatedGroups = filteredGroups.map(group => {
+            const groupPlatforms = group.platformGroupChildren.filter(platform =>
+                !platformFilter || platformFilter.includes(platform.platformName)
+            );
+            const groupMatchCount = groupPlatforms.reduce((sum, platform) => sum + platform.matchCount, 0);
+            return {
+                ...group,
+                matchCount: groupMatchCount
+            };
+        });
+
         dimensionFilter.forEach(dimension => {
             statistics[dimension] = {};
 
@@ -223,7 +233,34 @@ const InformationMatch = () => {
             });
         });
 
+        // 更新结果
+        setResult({
+            ...originalResult,
+            platformStructure: updatedGroups
+        });
+
         return statistics;
+    };
+
+    // 计算筛选后平台组的匹配数量总和
+    const calculateTotalMatchCount = () => {
+        if (!originalResult) return 0;
+
+        let filteredGroups = originalResult.platformStructure;
+        if (platformGroupFilter && platformGroupFilter.length > 0 && !platformGroupFilter.includes('全部')) {
+            filteredGroups = filteredGroups.filter(group =>
+                platformGroupFilter.includes(group.platformGroupName)
+            );
+        }
+
+        let filteredPlatforms = filteredGroups.flatMap(group => group.platformGroupChildren);
+        if (platformFilter && platformFilter.length > 0) {
+            filteredPlatforms = filteredPlatforms.filter(platform =>
+                platformFilter.includes(platform.platformName)
+            );
+        }
+
+        return filteredPlatforms.reduce((total, platform) => total + (platform.matchCount || 0), 0);
     };
 
     // 查看数据
@@ -242,13 +279,8 @@ const InformationMatch = () => {
 
     // 查看统计（已添加总和计算）
     const handleViewStatistics = (statistics: Record<string, Record<string, number>>, title: string, key?: string) => {
-        console.log("handleViewStatistics", statistics);
-
-        const hasData = Object.keys(statistics).some(dimension =>
-            Object.keys(statistics[dimension] || {}).length > 0
-        );
-
-        if (!hasData) {
+        // console.log("handleViewStatistics", statistics);
+        if (!statistics) {
             message.info('暂无统计数据');
             return;
         }
@@ -275,6 +307,12 @@ const InformationMatch = () => {
         setSelectedStatisticsKey(key || Object.keys(sortedStatistics)[0]);
         setDimensionTotals(dimensionTotals); // 保存各维度总和
         setStatisticsModalVisible(true);
+    };
+
+    // 查看平台组所有数据
+    const handleViewAllData = (group: PlatformGroup) => {
+        const allData = group.platformGroupChildren.flatMap(platform => platform.matchedData);
+        handleViewData(allData, allData.length);
     };
 
     // 导出数据
@@ -400,15 +438,41 @@ const InformationMatch = () => {
     const mainTableColumns = [
         { title: '平台组名称', dataIndex: 'platformGroupName', key: 'platformGroupName' },
         { title: '排序', dataIndex: 'order', key: 'order' },
-        { title: '匹配数量', dataIndex: 'matchCount', key: 'matchCount' },
+        {
+            title: '匹配数量',
+            key: 'matchCount',
+            render: (_, record: PlatformGroup) => {
+                // 筛选后的平台组显示该组下筛选后的平台匹配数量总和
+                if (platformFilter && platformFilter.length > 0) {
+                    const filteredPlatforms = record.platformGroupChildren.filter(platform =>
+                        platformFilter.includes(platform.platformName)
+                    );
+                    return filteredPlatforms.reduce((total, platform) => total + platform.matchCount, 0);
+                }
+                // 未筛选平台时显示平台组原始匹配数量
+                return record.matchCount;
+            }
+        },
         {
             title: '查看统计', key: 'viewStatistics',
+            width: 100,
             render: (_, record: PlatformGroup) => (
                 <Tooltip title="查看平台组的statistics数据统计">
                     <Button type="link" onClick={() => handleViewStatistics(
                         // @ts-ignore
                         record.statistics, record.platformGroupName)}>
                         查看统计
+                    </Button>
+                </Tooltip>
+            )
+        },
+        {
+            title: '查看所有数据', key: 'viewAllData',
+            width: 100,
+            render: (_, record: PlatformGroup) => (
+                <Tooltip title="查看平台组的所有匹配数据">
+                    <Button type="link" onClick={() => handleViewAllData(record)}>
+                        查看所有数据
                     </Button>
                 </Tooltip>
             )
@@ -544,8 +608,6 @@ const InformationMatch = () => {
                     </Button>
                 </Space>
             </Dragger>
-
-
 
             {/* 筛选区域 */}
             <Space style={{ marginTop: 16, width: '100%', display: 'flex', flexWrap: 'wrap' }}>
