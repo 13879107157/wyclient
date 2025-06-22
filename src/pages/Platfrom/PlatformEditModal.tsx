@@ -103,7 +103,7 @@ const PlatformEditModal = ({
             // 移除临时字段
             // delete formattedValues.matchRules;
             // delete formattedValues.exclusionRules;
-            console.log("formattedValues11111111111", formattedValues)
+            console.log("formattedValues", formattedValues)
 
             await updatePlatform(platform.id, formattedValues);
             onSuccess();

@@ -1,4 +1,4 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Table, Input, Button, message, Space, Popconfirm } from 'antd';
 import {
     getAllPlatformGroups,
@@ -123,7 +123,7 @@ const PlatformGroupList = () => {
         <div>
             <div className="page-title">
                 <h1>
-                   平台组列表
+                    平台组列表
                 </h1>
             </div>
             <Input.Search

@@ -20,7 +20,7 @@ export default function PlatFormTypeAdd() {
             message.success('平台类型创建成功');
 
             // 导航回列表页面
-            navigate(-1);
+            // navigate(-1);
         } catch (error) {
             console.error('创建平台类型失败:', error);
             message.error('创建平台类型失败，请重试');

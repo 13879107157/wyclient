@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import  { useState, useEffect } from 'react';
 import { Modal, Form, Input } from 'antd';
 import { updatePlatformType } from '../../api/platFromTypeApi';
 
@@ -21,6 +21,13 @@ const PlatformTypeEditModal = ({
 }: PlatformTypeEditModalProps) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+
+  // 确保数据变化时重置表单
+  useEffect(() => {
+    if (visible && initialValues) {
+      form.setFieldsValue(initialValues);
+    }
+  }, [visible, initialValues, form]);
 
   const handleSubmit = async () => {
     try {

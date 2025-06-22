@@ -14,7 +14,7 @@ const PlatformGroupAdd = () => {
         try {
             await createPlatformGroup(values);
             message.success('平台组创建成功');
-            navigate(-1);
+            // navigate(-1);
         } catch (error: any) {
             message.error(error.message || '创建平台组失败');
         }

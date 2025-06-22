@@ -78,7 +78,7 @@ const PlatformAdd = () => {
             delete formattedValues.exclusionRules;
 
             await createPlatform(formattedValues);
-            navigate(-1); // 返回上一页
+            // navigate(-1); // 返回上一页
         } catch (error) {
             console.error('创建平台失败:', error);
         } finally {

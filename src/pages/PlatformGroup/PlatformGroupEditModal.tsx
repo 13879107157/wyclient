@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Form, Input, Select } from 'antd';
 import { updatePlatformGroup, type PlatformGroup } from '../../api/platformGroupApi';
 
@@ -20,6 +20,18 @@ const PlatformGroupEditModal = ({
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
 
+    // 确保数据变化时重置表单
+    useEffect(() => {
+        if (visible && platformGroup) {
+            form.setFieldsValue({
+                name: platformGroup.name,
+                description: platformGroup.description,
+                status: platformGroup.status,
+                order: platformGroup.order,
+            });
+        }
+    }, [visible, platformGroup, form]);
+
     // 表单提交处理
     const handleSubmit = async () => {
         try {
@@ -40,14 +52,6 @@ const PlatformGroupEditModal = ({
         onCancel();
     };
 
-    // 表单初始值
-    const initialValues = {
-        name: platformGroup.name,
-        description: platformGroup.description,
-        status: platformGroup.status,
-        order: platformGroup.order,
-    };
-
     return (
         <Modal
             title="编辑平台组"
@@ -58,7 +62,6 @@ const PlatformGroupEditModal = ({
         >
             <Form
                 form={form}
-                initialValues={initialValues}
                 layout="vertical"
             >
                 <Form.Item
@@ -83,8 +86,8 @@ const PlatformGroupEditModal = ({
                     rules={[{ required: true, message: '请选择状态' }]}
                 >
                     <Select>
-                        <Option value={true}>启用</Option>
-                        <Option value={false}>禁用</Option>
+                        <Option value={1}>启用</Option>
+                        <Option value={0}>禁用</Option>
                     </Select>
                 </Form.Item>
 
